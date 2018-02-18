@@ -1,7 +1,3 @@
-<?php
-
-?>
-
 <!DOCTYPE html>
 <html>
     <head>
@@ -9,21 +5,11 @@
         <title> </title>
         
     </head>
-    <body>
-        <!-- 
-        <table border="1" cellspacing="0" cellpadding="30" align="center" style="margin-top:100px;">
-            <tr><td>X </td> <td>X </td> <td>X </td> <td>X </td> <td>X </td> </tr>
-            <tr><td>X </td> <td>X </td> <td>X </td> <td>X </td> <td>X </td> </tr>
-            <tr><td>X </td> <td>X </td> <td>X </td> <td>X </td> <td>X </td> </tr>
-            <tr><td>X </td> <td>X </td> <td>X </td> <td>X </td> <td>X </td> </tr>
-            <tr><td>X </td> <td>X </td> <td>X </td> <td>X </td> <td>X </td> </tr>
-        </table>
-        -->
-        
-        
+    <body style="background-color:#F0F8FF">
+      
         <!--Indice do labirinto -->
         <table border="1" bordercolor="blue" cellspacing="0" cellpadding="5" align="center" style="margin-top:20px; margin-bottom:10px;">
-            <tr><td style="background-color:gray; width:25px"></td><td> ← Limite</td>
+            <tr><td style="background-color:#5F9EA0; width:25px"></td><td> ← Trajeto</td>
                 <td style="background-color:black; width:25px"></td><td> ← Muro</td>
                 <td style="background-color:red; width:25px"></td><td> ← Saída</td>
             </tr>
@@ -40,7 +26,7 @@
         </form>
         
         
-        
+        <!-- -------------------------------- PHP ------------------------------------ -->
         <?php
             if ($_SERVER["REQUEST_METHOD"] == "POST"){
                 
@@ -48,21 +34,11 @@
                 $qtdLinha = $_POST["tLinha"];
                 $qtdColuna = $_POST["tColuna"];
                 */
-                $qtdLinha = rand(15,25);
-                $qtdColuna = rand(30,70);
+                $qtdLinha = rand(6,10);
+                $qtdColuna = rand(10,15);
                 
-                /* Declara array multidimensional com 0
-                for ($l=0; $l<$qtdLinha; $l++){
-                    $lab[$l] = array();
-                    for ($c=0; $c<$qtdColuna; $c++){
-                        $lab[$l][$c] = 0;                
-                    }
-                }
-                */
-                
-                
-                
-                // 0 é livre, 1 é parede
+
+                // DEFINE CAMINHO, PAREDE E LIMITE
                 for ($l=0; $l<$qtdLinha; $l++){
                     $lab[$l] = array();
                     for ($c=0; $c<$qtdColuna; $c++){
@@ -99,56 +75,91 @@
                 }
                 // ---
                 
+                
                 /* define entrada e saida */
                 $entrada = rand(1,$qtdLinha-2);
                 $saida = rand(1,$qtdLinha-2);
                 
-                $lab[$entrada][0] = 2;
+                $lab[$entrada][0] =0; // ERA 2
                 $lab[$saida][$qtdColuna-1] = 3;
                 // ---
                 
                 // retira parede da frente da entrada/saida
                 $lab[$entrada][1] = 0;
                 $lab[$saida][$qtdColuna-2] = 0;
-                //
+                // ---
+                
+                //exibelab($lab, $qtdLinha, $qtdColuna);
+                
+                caminho ($lab, $qtdLinha, $qtdColuna, $entrada, $saida);
                 
                 
-                echo '<table border="0" cellspacing="0" cellpadding="8" align="center" style="margin-top:20px;"   >';
-                for ($l=0; $l<$qtdLinha; $l++){
-                    echo '<tr>';
-                    for ($c=0; $c<$qtdColuna; $c++){
-                        if ($lab[$l][$c] == 0){
-                            echo '<td></td>';
-                        }elseif ($lab[$l][$c] == 1){
-                            echo '<td style="background-color:black"></td>';
-                        }elseif ($lab[$l][$c] == 2){
-                            echo '<td style="background-color:white"></td>';
-                        }elseif ($lab[$l][$c] == 3){
-                            echo '<td style="background-color:red"></td>';
-                        }else{
-                            echo '<td style="background-color:gray"></td>';
+            } //TERMINA FUNCAO POST
+        
+        // --------------------------------- FUNCOES --------------------------------- //
+        
+        // EXIBE LAB
+        function exibeLab($lab, $qtdLinha, $qtdColuna){
+            echo '<table border="0" cellspacing="1" cellpadding="20" align="center" style="margin-top:20px;"   >';
+            for ($l=0; $l<$qtdLinha; $l++){
+                echo '<tr>';
+                for ($c=0; $c<$qtdColuna; $c++){
+                    if ($lab[$l][$c] == 0){
+                        echo '<td style="background-color:white"></td>';
+                    }elseif ($lab[$l][$c] == 1){
+                        echo '<td style="background-color:black"></td>';
+                    }elseif ($lab[$l][$c] == 3){
+                        echo '<td style="background-color:red"></td>';
+                    }elseif ($lab[$l][$c] == 4){
+                        echo '<td style="background-color:black"></td>';
+                    }elseif ($lab[$l][$c] == 5){
+                        echo '<td style="background-color:#5F9EA0;"></td>';
+                    }
+                }
+                echo '</tr>';
+            }
+            echo "</table>";
+        }
+        
+        
+        
+        function caminho($lab, $qtdL, $qtdC, $entrada, $saida){
+            analisaCaminho($lab, $qtdL, $qtdC, $entrada, 0, $saida, $qtdC-1, $entrada, 0);
+        }
+        
+        // 0-Caminho | 1-muro | 2-? | 3-saida | 4-muro | 5-Percorrido
+        function analisaCaminho($lab, $qtdL, $qtdC, $pLI, $pCI, $pLF, $pCF, $pLA, $pCA){     
+            if ($pLA == $pLF && $pCA == $pCF){
+                exibelab($lab, $qtdL, $qtdC);
+            }else{
+                $lab[$pLA][$pCA] = 5;
+
+                    //define vizinhança
+                    for($c = -1; $c <= +1; $c++){
+                        for($l = -1; $l <= +1; $l++){
+                            $liA = $pLA+ $c; // linha atual
+                            $coA = $pCA+ $l; // coluna atual
+                            
+                            //verifica se está dentro dos limites
+                            if ( ($liA > 0 && $liA <=$qtdL-1) && ($coA > 0 && $coA <= $qtdC-1)  ){                   
+                                // verifica se EXISTE, e se é caminho ou saida
+                                if (isset($lab[$liA][$coA]) && ( $lab[$liA][$coA] == 0 || $lab[$liA][$coA] == 3 )){     
+                                    // exclui diagonais
+                                    if ($c * $l == 0){
+                                        //exclui limites
+                                        if ($lab[$liA][$coA] != 4){   
+                                            analisaCaminho($lab, $qtdL, $qtdC, $pLI, $pCI, $pLF, $pCF, $liA,$coA);
+                                        }
+                                    }
+                                }
+                            } // fim limites
+                            
                         }
                     }
-                    echo '</tr>';
-                }
-                echo "</table>";
-                
-                
-                /* tabela a partir dos dados do usuario 
-                echo '<table border="1" cellspacing="0" cellpadding="30" align="center" style="margin-top:100px;"   >';
-                for ($x = 1; $x <= $qtdLinha; $x++){
-                    echo '<tr>';
-                    for ($y = 1; $y <= $qtdColuna; $y++){
-                        echo '<td> X </td>';
-                    }
-                    echo '</tr>';
-                }
-                echo '</table>';
-                */
-                
-                //echo var_dump($lab);
+                    // e se eu resetar o caminho aqui?   
             }
-                
+        }
+       
         ?>
         
     
